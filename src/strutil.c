@@ -487,7 +487,7 @@ struct Pointer_counter *pointer_counter_create(void)
 int pointer_counter_add(struct Pointer_counter **head,
 			struct Str *_str_ptr)
 {
-	if (head == NULL || _str_ptr == NULL)
+	if (_str_ptr == NULL)
 		return -1;
 	
 	struct Pointer_counter *pc_ptr = pointer_counter_create();
