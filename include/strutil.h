@@ -47,7 +47,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
+#include <stdio.h>
+#include <pthread.h>
 
 #if defined(__clang__) || defined(__GNUC__)
   #define STR_WARN_UNUSED_RESULT __attribute((warn_unused_result))
@@ -55,7 +56,7 @@
   #define STR_WARN_UNUSED_RESULT 
 #endif
 
-const size_t MAX_STRING_SIZE  = ((SIZE_MAX / 100) * 95);
+extern const size_t MAX_STRING_SIZE;
 
 
 struct Str {
@@ -339,5 +340,6 @@ bool str_is_empty(struct Str *self);
 
 
 struct Pointer_counter *pointer_counter_create(void);
-
+int pointer_counter_add(struct Pointer_counter **head, struct Str *_str_ptr);
+int pointer_counter_free(struct Pointer_counter **head, struct Str *_str_ptr);
 #endif

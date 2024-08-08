@@ -5,7 +5,8 @@
 #include <assert.h>
 #include <errno.h>
 #include <ctype.h>
-#include <pthread.h>
+
+const size_t MAX_STRING_SIZE  = ((SIZE_MAX / 100) * 95);
 
 struct Str *str_init(void)
 {
@@ -204,9 +205,9 @@ void str_free(struct Str *self)
 			self->data = NULL;
 		}
 		if (self->is_dynamic) {
+			pthread_mutex_destroy(&self->lock);
 			free(self);
 			self = NULL;
-			pthread_mutex_destroy(&self->lock);
 		}
 	}
 }
@@ -470,7 +471,7 @@ struct Pointer_counter *pointer_counter_create(void)
 	pc->str_ptr = (struct Str *)calloc(1, sizeof(struct Str));
 	if (pc->str_ptr == NULL) {
 		free(pc);
-		return -1;
+		return NULL;
 	}
 
 	if((pthread_mutex_init(&pc->lock, NULL)) != 0) {
@@ -514,4 +515,31 @@ int pointer_counter_add(struct Pointer_counter **head,
 	head_ptr->str_ptr = _str_ptr;
 
 	return 0;
+}
+
+int pointer_counter_free(struct Pointer_counter **head,
+			struct Str *_str_ptr)
+{
+	if (*head == NULL || _str_ptr == NULL)
+		return -1;
+	
+	if ((*head)->str_ptr == _str_ptr) {
+		free(*head);
+		return 0;
+	}
+
+	struct Pointer_counter *pc_iter = (*head)->next;
+	struct Pointer_counter *pc_iter_back = *head;
+
+	for (size_t i = 0; i < (*head)->counter; i++) {
+		if (pc_iter == NULL) {
+			return -1;
+		} else if (pc_iter->str_ptr == _str_ptr) {
+			pc_iter_back->next = pc_iter->next;
+			free(pc_iter);
+			return 0;
+		}
+		pc_iter = pc_iter->next;
+		pc_iter_back = pc_iter_back->next;
+	}
 }
